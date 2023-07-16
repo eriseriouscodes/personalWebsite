@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basic Doodle Jump HTML Game</title>
+  <meta charset="UTF-8">
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    border: 1px solid black;
+  }
+  </style>
+</head>
+<body>
+<br />
+      <canvas width="375" height="667" id="game"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const context = canvas.getContext('2d');
+
+const platformWidth = 65;
+const platformHeight = 20;
+const platformStart = canvas.height - 50;
+
+const gravity = 0.33;
+const drag = 0.3;
+const bounceVelocity = -12.5;
+
+let minPlatformSpace = 15;
+let maxPlatformSpace = 20;
+
+let platforms = [{
+  x: canvas.width / 2 - platformWidth / 2,
+  y: platformStart
+}];
+
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+let y = platformStart;
+while (y > 0) {
+  y -= platformHeight + random(minPlatformSpace, maxPlatformSpace);
+
+  let x;
+  do {
+    x = random(25, canvas.width - 25 - platformWidth);
+  } while (
+    y > canvas.height / 2 &&
+    x > canvas.width / 2 - platformWidth * 1.5 &&
+    x < canvas.width / 2 + platformWidth / 2
+  );
+
+  platforms.push({ x, y });
+}
+
+const doodle = {
+  img: new Image(),
+  width: 40,
+  height: 60,
+  x: canvas.width / 2 - 20,
+  y: platformStart - 60,
+
+  dx: 0,
+  dy: 0
+};
+
+doodle.img.src = '../jpg/20220116_130206.jpg'
+
+let playerDir = 0;
+let keydown = false;
+let prevDoodleY = doodle.y;
+
+function loop() {
+  requestAnimationFrame(loop);
+  context.clearRect(0,0,canvas.width,canvas.height);
+
+  doodle.dy += gravity;
+
+  if (doodle.y < canvas.height / 2 && doodle.dy < 0) {
+    platforms.forEach(function(platform) {
+      platform.y += -doodle.dy;
+    });
+
+    while (platforms[platforms.length - 1].y > 0) {
+      platforms.push({
+        x: random(25, canvas.width - 25 - platformWidth),
+        y: platforms[platforms.length - 1].y - (platformHeight + random(minPlatformSpace, maxPlatformSpace))
+      })
+
+      minPlatformSpace += 0.5;
+      maxPlatformSpace += 0.5;
+
+      maxPlatformSpace = Math.min(maxPlatformSpace, canvas.height / 2);
+    }
+  }
+  else {
+    doodle.y += doodle.dy;
+  }
+
+  if (!keydown) {
+    if (playerDir < 0) {
+      doodle.dx += drag;
+
+      if (doodle.dx > 0) {
+        doodle.dx = 0;
+        playerDir = 0;
+      }
+    }
+    else if (playerDir > 0) {
+      doodle.dx -= drag;
+
+      if (doodle.dx < 0) {
+        doodle.dx = 0;
+        playerDir = 0;
+      }
+    }
+  }
+
+  doodle.x += doodle.dx;
+
+  if (doodle.x + doodle.width < 0) {
+    doodle.x = canvas.width;
+  }
+  else if (doodle.x > canvas.width) {
+    doodle.x = -doodle.width;
+  }
+
+  context.fillStyle = 'green';
+  platforms.forEach(function(platform) {
+    context.fillRect(platform.x, platform.y, platformWidth, platformHeight);
+
+    if (
+      doodle.dy > 0 &&
+
+      prevDoodleY + doodle.height <= platform.y &&
+
+      doodle.x < platform.x + platformWidth &&
+      doodle.x + doodle.width > platform.x &&
+      doodle.y < platform.y + platformHeight &&
+      doodle.y + doodle.height > platform.y
+    ) {
+      doodle.y = platform.y - doodle.height;
+      doodle.dy = bounceVelocity;
+    }
+  });
+
+  context.fillStyle = 'yellow';
+  context.fillRect(doodle.x, doodle.y, doodle.width, doodle.height);
+
+  prevDoodleY = doodle.y;
+
+  platforms = platforms.filter(function(platform) {
+    return platform.y < canvas.height;
+  })
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.which === 37) {
+    keydown = true;
+    playerDir = -1;
+    doodle.dx = -3;
+
+  }
+  else if (e.which === 39) {
+    keydown = true;
+    playerDir = 1;
+    doodle.dx = 3;
+  }
+});
+
+document.addEventListener('keyup', function(e) {
+  keydown = false;
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+
+<script>
+function highScore(score) {
+   var saved = 0;
+   try { saved = parseFloat(localStorage.highScore); } catch (e) { saved = 0; }
+   if (!(typeof score === 'undefined')) {
+      saved = score;
+      localStorage.highScore = '' + score;
+   }
+   if (isNaN(saved)) {
+      saved = 0;
+      localStorage.highScore = '0';
+   }
+   return saved;
+}
+var myGamePiece;
+var myBackground;
+var myObstacles = [];
+var myScore;
+var gameSpeed = 1;
+
+function startGame() {
+    myGamePiece = new component(50, 50, "http://images.tourismholdings.com/public/2016/02/56bd3c714ecc6.png", 35, 200, "image");
+    myScore = new component("30px", "Algerian", "turquoise", 15, 30, "text");
+    myGameArea.start();
+}
+
+function component(width, height, color, x, y, type) {
+  if (type == "image") {
+    this.image = new Image();
+    this.image.src = color;
+  }
+      this.type = type;
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0; 
+    this.gravity = 0.05;
+    this.gravitySpeed = 0;
+    this.x = x;
+    this.y = y;   
+    this.update = function() {
+        ctx = myGameArea.context;
+    if (type == "image") {
+      ctx.drawImage(this.image, 
+        this.x, 
+        this.y,
+        this.width, this.height);
+    }
+    else if (this.type == "text") {
+      ctx.font = this.width + " " + this.height;
+      ctx.fillStyle = color;
+      ctx.fillText(this.text, this.x, this.y);
+    }
+    }
+    this.newPos = function() {
+        this.gravitySpeed += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY + this.gravitySpeed;
+        this.hitBottom();
+    }  
+     this.hitBottom = function() {
+        var rockbottom = myGameArea.canvas.height - this.height;
+        if (this.y > rockbottom) {
+            this.y = rockbottom;
+        }
+    }
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;	
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+}
+
+function updateGameArea() {
+
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    for (i = 0; i < myObstacles.length; i += 1) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+            myGameArea.stop()
+            document.getElementsByClassName("resetButton")[0].innerHTML='<button onclick="location.reload();"<p style="height:27px;width:815px">Restart Game</button>';
+            return;
+        }
+    }
+    myGameArea.clear();
+    myGameArea.frameNo += 1;
+    if (myGameArea.frameNo == 1 || everyinterval(150)) {
+        x = myGameArea.canvas.width;
+        minHeight = 20;
+        maxHeight = 200;
+        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        minGap = 150;
+        maxGap = 250;
+        gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+        myObstacles.push(new component(15, height, "https://orig00.deviantart.net/bb11/f/2014/127/f/e/hexagon_wallpaper___version_3_by_designedby_jack-d7hh9xo.png", x, 0, "image"));
+        myObstacles.push(new component(15, height, "https://orig00.deviantart.net/bb11/f/2014/127/f/e/hexagon_wallpaper___version_3_by_designedby_jack-d7hh9xo.png", x, height + gap, "image"));
+        gameSpeed = gameSpeed - 1;    
+    }
+    myBackground.newPos();   
+    myBackground.update();
+    for (i = 0; i < myObstacles.length; i += 1) {
+        myObstacles[i].x += gameSpeed;
+        myObstacles[i].update();
+    }
+    myScore.text="Space Run                                                         SCORE: " + myGameArea.frameNo;
+    myScore.update();
+    myGamePiece.newPos();   
+    myGamePiece.update();
+}
+
+function everyinterval(n) {
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
+function moveup() {
+    myGamePiece.speedY = -1;
+}
+
+function movedown() {
+    myGamePiece.speedY = 1;
+}
+
+function moveleft() {
+    myGamePiece.speedX = -1;
+}
+
+function moveright() {
+    myGamePiece.speedX = 1;
+}
+
+function clearmove() {
+    myGamePiece.speedX = 0;
+    myGamePiece.speedY = 0;
+}
+function accelerate(n) {
+    myGamePiece.gravity = n;
+}
+</script>
+</body>
+</html>
+<audio <embed loop="true" autoplay="autoplay">
+     <source src="http://a.tumblr.com/tumblr_m545gt2gbp1r5da8vo1.mp3" />     
+ </audio>
+
+<script>
+</script>
+</body>
+</html>
