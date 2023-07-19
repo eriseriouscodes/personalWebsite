@@ -1,5 +1,3 @@
-const { content } = require("html2canvas/dist/types/css/property-descriptors/content")
-
 function showParagraph(paragraphName) {
   const myClickedParagraph = document.getElementById(paragraphName)
   const allMyParagraphs = document.getElementsByClassName('myParagraphs')
